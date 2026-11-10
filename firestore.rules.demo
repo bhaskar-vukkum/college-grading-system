@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// DEMO ONLY — open to anyone with the project's web config.
+// Replace with authenticated rules before this carries real student records:
+//   allow read: if request.auth != null && request.auth.uid == docId;
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+    match /faculty/{facultyId} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
