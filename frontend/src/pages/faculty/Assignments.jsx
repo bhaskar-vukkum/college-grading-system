@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { listRecords } from '../../lib/db'
-import { entryFor, rosterFor } from '../../lib/portal'
+import { entryFor, publishedEntryFor, rosterFor, yearForAssignment } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 const STATUS = {
@@ -36,9 +36,14 @@ export default function FacultyAssigned() {
   }, [source])
 
   const rows = assignments.map((assignment) => {
-    const roster = rosterFor(students, assignment.code, department)
+    const roster = rosterFor(
+      students,
+      assignment.code,
+      department,
+      yearForAssignment(assignment)
+    )
     const graded = roster.filter((student) => entryFor(student, assignment.id)).length
-    const published = roster.filter((student) => entryFor(student, assignment.id)?.published).length
+    const published = roster.filter((student) => publishedEntryFor(student, assignment)).length
     const status =
       roster.length > 0 && published === roster.length
         ? 'Published'
@@ -86,6 +91,7 @@ export default function FacultyAssigned() {
             <thead>
               <tr>
                 <th scope="col">Course and exam</th>
+                <th scope="col">Year</th>
                 <th scope="col">Due</th>
                 <th scope="col">Graded</th>
                 <th scope="col">Published</th>
@@ -105,6 +111,7 @@ export default function FacultyAssigned() {
                         <span className="course-name">{item.exam}</span>
                       </span>
                     </td>
+                    <td>{yearForAssignment(item)}</td>
                     <td className="mono-cell">{item.due}</td>
                     <td>
                       <span className="progress">

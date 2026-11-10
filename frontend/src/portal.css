@@ -86,7 +86,8 @@
 }
 
 .branch-select,
-.exam-create-form input {
+.exam-create-form input,
+.exam-create-form select {
   min-height: 40px;
   padding: 0 11px;
   border: 1px solid var(--line);
@@ -97,7 +98,8 @@
 }
 
 .branch-select:focus,
-.exam-create-form input:focus {
+.exam-create-form input:focus,
+.exam-create-form select:focus {
   outline: none;
   border-color: var(--p-ink);
   box-shadow: 0 0 0 3px rgba(6, 82, 92, 0.1);
@@ -360,6 +362,20 @@
 .grade-buttons {
   display: flex;
   gap: 10px;
+}
+
+.grade-buttons .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+.grade-buttons .btn--primary:not(:disabled) {
+  background: #12616a;
+}
+
+.grade-buttons .btn--primary:not(:disabled):hover {
+  background: #0b5059;
 }
 
 /* --- Lists, filters, search -------------------------------------------- */

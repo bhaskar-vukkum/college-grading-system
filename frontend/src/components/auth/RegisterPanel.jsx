@@ -2,13 +2,17 @@ import React, { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
 import { register } from '../../lib/auth'
-import { DEPARTMENTS } from '../../lib/seedData'
+import { DEPARTMENTS, STUDENT_YEARS } from '../../lib/seedData'
 import { PasswordField, PasswordRules, SelectField, TextField } from './Field'
 
 const EASE = [0.22, 1, 0.36, 1]
 
-const YEARS = ['1st year', '2nd year', '3rd year', '4th year']
-const SEMESTERS = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8']
+const SEMESTERS_BY_YEAR = {
+  '1st year': ['Semester 1', 'Semester 2'],
+  '2nd year': ['Semester 3', 'Semester 4'],
+  '3rd year': ['Semester 5', 'Semester 6'],
+  '4th year': ['Semester 7', 'Semester 8'],
+}
 const DESIGNATIONS = ['Assistant professor', 'Associate professor', 'Professor', 'Lab instructor', 'Visiting faculty']
 
 const field = (key, label, extra = {}) => ({ key, label, type: 'text', ...extra })
@@ -30,8 +34,8 @@ const SCHEMA = {
       sub: 'Where you sit in the college this term.',
       fields: [
         { key: 'department', label: 'Branch', type: 'select', options: DEPARTMENTS },
-        { key: 'year', label: 'Year', type: 'select', options: YEARS },
-        { key: 'semester', label: 'Semester', type: 'select', options: SEMESTERS },
+        { key: 'year', label: 'Year', type: 'select', options: STUDENT_YEARS },
+        { key: 'semester', label: 'Semester', type: 'select', options: [] },
       ],
     },
     { label: 'Password', type: 'password', sub: 'The password you will sign in with.' },
@@ -90,7 +94,11 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
 
   const set = (key) => (event) => {
     const { value } = event.target
-    setValues((prev) => ({ ...prev, [key]: value }))
+    setValues((prev) =>
+      key === 'year'
+        ? { ...prev, year: value, semester: SEMESTERS_BY_YEAR[value]?.[0] || '' }
+        : { ...prev, [key]: value }
+    )
     setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev))
   }
 
@@ -268,7 +276,10 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
                       error={errors[item.key]}
                     >
                       <option value="">Choose one</option>
-                      {item.options.map((option) => (
+                      {(item.key === 'semester'
+                        ? SEMESTERS_BY_YEAR[values.year] || []
+                        : item.options
+                      ).map((option) => (
                         <option key={option} value={option}>
                           {option}
                         </option>

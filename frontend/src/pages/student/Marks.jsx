@@ -2,6 +2,7 @@ import React from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { EmptyState, GradeChip, Stat } from '../../components/dashboard/Bits'
 import { computeGpa } from '../../lib/grades'
+import { yearForStudent } from '../../lib/portal'
 
 export default function StudentMarks() {
   const { record } = useOutletContext()
@@ -51,7 +52,7 @@ export default function StudentMarks() {
       <section className="panel panel-table">
         <div className="panel-head">
           <h3 className="panel-title">Published exam marks</h3>
-          <span className="mono">{record.semester} · {record.year}</span>
+          <span className="mono">{record.semester} · {yearForStudent(record)}</span>
         </div>
 
         <div className="table-scroll">

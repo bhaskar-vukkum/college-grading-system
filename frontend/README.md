@@ -33,10 +33,15 @@ npm run build
 
 Student rosters are matched to faculty by branch (the `department` field). All
 faculty in the same branch share that branch's roster; section is not used.
-Faculty can add exams from **Enter marks**. Publishing requires marks for every
-student in the roster and updates each student's published exam entries,
-course marks, credits, average and credit-weighted GPA. Firebase-backed student
-records receive live updates in the student portal.
+Students register into first-, second-, third- or fourth-year groups, with
+semester choices restricted to the selected year. Faculty select a year when
+adding an exam; only students in that branch and year appear on its grading
+sheet. Older records without a year infer it from their semester when possible.
+Totals and grades update while typing. Saving marks asks for
+confirmation, requires marks for every student before publishing, and updates
+each student's exam results, course marks, credits, average and credit-weighted
+GPA. Class results are calculated from each selected exam's published marks.
+Firebase-backed student portals receive live updates.
 
 The demo accounts and sample grades are defined in `src/lib/seedData.js`. To
 load them into the configured Firestore project, run `npm run seed` only on a

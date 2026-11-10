@@ -3,26 +3,30 @@ import { useOutletContext } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { listRecords } from '../../lib/db'
 import { GRADE_ORDER, summarise } from '../../lib/grades'
-import { markFor, rosterFor } from '../../lib/portal'
+import { publishedEntryFor, rosterFor, yearForAssignment } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 export default function FacultyResults() {
   const { record, source } = useOutletContext()
-  const courses = record.courses || []
+  const assignments = record.assignments || []
   const department = record.department
   const [students, setStudents] = useState([])
-  const [course, setCourse] = useState(courses[0]?.code || '')
+  const [examId, setExamId] = useState(assignments[0]?.id || '')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const assignment = assignments.find((item) => item.id === examId) || assignments[0]
+
   useEffect(() => {
     let alive = true
-    listRecords('student', { requireRemote: source === 'firebase' }).then(({ records }) => {
-      if (!alive) return
-      setStudents(records)
-      setLoading(false)
-    })
+    listRecords('student', { requireRemote: source === 'firebase' })
+      .then(({ records }) => {
+        if (!alive) return
+        setStudents(records)
+        setLoading(false)
+      })
       .catch((loadError) => {
+        if (!alive) return
         setError(loadError.message)
         setLoading(false)
       })
@@ -31,14 +35,23 @@ export default function FacultyResults() {
     }
   }, [source])
 
-  const roster = useMemo(
-    () => rosterFor(students, course, department),
-    [students, course, department]
-  )
-  const published = roster
-    .map((student) => ({ student, mark: markFor(student, course) }))
-    .filter((row) => row.mark)
+  useEffect(() => {
+    if (!assignments.some((item) => item.id === examId)) {
+      setExamId(assignments[0]?.id || '')
+    }
+  }, [assignments, examId])
 
+  const roster = useMemo(
+    () =>
+      assignment
+        ? rosterFor(students, assignment.code, department, yearForAssignment(assignment))
+        : [],
+    [students, department, assignment]
+  )
+
+  const published = roster
+    .map((student) => ({ student, mark: publishedEntryFor(student, assignment) }))
+    .filter((row) => row.mark)
   const stats = summarise(published.map((row) => row.mark))
   const peak = Math.max(1, ...stats.spread.map((entry) => entry.count))
 
@@ -56,12 +69,12 @@ export default function FacultyResults() {
     return <div className="page"><p className="portal-sync-warning" role="alert">{error}</p></div>
   }
 
-  if (courses.length === 0) {
+  if (assignments.length === 0) {
     return (
       <div className="page">
         <EmptyState
-          title="No course to report on"
-          body="Class results appear once you hold a course with students in it."
+          title="No exam results yet"
+          body="Results are calculated from the marks published for each exam."
         />
       </div>
     )
@@ -69,15 +82,15 @@ export default function FacultyResults() {
 
   return (
     <div className="page">
-      <div className="filter-chips" role="group" aria-label="Course">
-        {courses.map((entry) => (
+      <div className="filter-chips" role="group" aria-label="Exam">
+        {assignments.map((item) => (
           <button
-            key={entry.code}
+            key={item.id}
             type="button"
-            className={`filter-chip${course === entry.code ? ' is-active' : ''}`}
-            onClick={() => setCourse(entry.code)}
+            className={`filter-chip${assignment?.id === item.id ? ' is-active' : ''}`}
+            onClick={() => setExamId(item.id)}
           >
-            {entry.code} &middot; {entry.title}
+            {item.code} · {item.exam} · {yearForAssignment(item)}
           </button>
         ))}
       </div>
@@ -89,7 +102,7 @@ export default function FacultyResults() {
             {stats.count ? stats.average : '—'}
             <span className="stat-unit">{stats.count ? '/ 100' : ''}</span>
           </p>
-          <p className="stat-detail">{stats.count} results published</p>
+          <p className="stat-detail">{stats.count} published results</p>
         </div>
         <div className="stat">
           <p className="stat-label">Highest</p>
@@ -102,9 +115,7 @@ export default function FacultyResults() {
             {stats.count ? stats.passRate : '—'}
             <span className="stat-unit">{stats.count ? '%' : ''}</span>
           </p>
-          <p className="stat-detail">
-            {stats.passed} of {roster.length} on this course
-          </p>
+          <p className="stat-detail">{stats.passed} of {roster.length} students</p>
         </div>
       </section>
 
@@ -112,7 +123,7 @@ export default function FacultyResults() {
         <section className="panel">
           <h3 className="panel-title">Grade spread</h3>
           {stats.count === 0 ? (
-            <p className="panel-sub">Nothing published for this course yet.</p>
+            <p className="panel-sub">No marks have been published for this exam.</p>
           ) : (
             <ul className="spread">
               {GRADE_ORDER.map((grade) => {
@@ -135,9 +146,9 @@ export default function FacultyResults() {
         <aside className="panel">
           <h3 className="panel-title">Still to publish</h3>
           <ul className="pending-list">
-            {roster.length === 0 && <li className="course-empty">No students on this course.</li>}
+            {roster.length === 0 && <li className="course-empty">No students in this year and branch.</li>}
             {roster
-              .filter((student) => !markFor(student, course))
+              .filter((student) => !publishedEntryFor(student, assignment))
               .slice(0, 6)
               .map((student) => (
                 <li key={student.id} className="pending-row">
@@ -145,8 +156,8 @@ export default function FacultyResults() {
                   <span className="course-code">{student.id}</span>
                 </li>
               ))}
-            {roster.length > 0 && roster.every((student) => markFor(student, course)) && (
-              <li className="course-empty">Every student has a grade.</li>
+            {roster.length > 0 && roster.every((student) => publishedEntryFor(student, assignment)) && (
+              <li className="course-empty">Every student has a published grade.</li>
             )}
           </ul>
         </aside>

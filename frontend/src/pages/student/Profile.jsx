@@ -1,6 +1,7 @@
 import React from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { DetailList, Stat } from '../../components/dashboard/Bits'
+import { yearForStudent } from '../../lib/portal'
 
 export default function StudentProfile() {
   const { record } = useOutletContext()
@@ -27,7 +28,7 @@ export default function StudentProfile() {
             {record.id} &middot; {record.department}
           </p>
           <div className="chips">
-            <span className="chip">{record.year}</span>
+            <span className="chip">{yearForStudent(record) || 'Year not set'}</span>
             <span className="chip">{record.semester}</span>
           </div>
         </div>
@@ -48,7 +49,7 @@ export default function StudentProfile() {
               { label: 'Email', value: record.email },
               { label: 'Phone', value: record.phone },
               { label: 'Branch', value: record.department },
-              { label: 'Year', value: record.year },
+              { label: 'Year', value: yearForStudent(record) || 'Not set' },
               { label: 'Semester', value: record.semester },
               { label: 'Enrolled', value: record.enrolled },
             ]}

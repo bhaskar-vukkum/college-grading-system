@@ -33,6 +33,17 @@ export const DEPARTMENTS = [
   'Civil Engineering',
   'Mathematics',
 ]
+export const STUDENT_YEARS = ['1st year', '2nd year', '3rd year', '4th year']
+const STUDENT_YEAR_BY_INDEX = [0, 1, 2, 1, 2, 0, 2, 0, 1, 0, 1, 2, 1, 2, 0]
+
+export function normalizeYear(value) {
+  const text = String(value || '').trim().toLowerCase()
+  const year = text.match(/[1-4]/)?.[0]
+  if (year) return STUDENT_YEARS[Number(year) - 1]
+  const words = ['first', 'second', 'third', 'fourth']
+  const index = words.findIndex((word) => text.includes(word))
+  return index < 0 ? '' : STUDENT_YEARS[index]
+}
 
 const COURSE_POOL = [
   { code: 'CS 401', title: 'Compilers and optimization', credits: 4 },
@@ -51,6 +62,19 @@ const DEPARTMENT_COURSES = {
   'Computer Science': COURSE_POOL.filter((course) => course.code.startsWith('CS ') && course.code !== 'CS 403'),
   'Information Technology': COURSE_POOL.filter((course) => ['CS 403', 'HS 208'].includes(course.code)),
   'Electronics and Communication': COURSE_POOL.filter((course) => course.code.startsWith('EC ')),
+}
+
+const COURSE_YEARS = {
+  'CS 401': ['1st year', '2nd year'],
+  'CS 411': ['3rd year'],
+  'CS 402': ['2nd year'],
+  'CS 406': ['2nd year'],
+  'CS 405': ['2nd year'],
+  'CS 412': ['3rd year'],
+  'CS 403': ['1st year'],
+  'HS 208': ['2nd year'],
+  'EC 401': ['1st year', '2nd year'],
+  'EC 402': ['3rd year'],
 }
 
 const GRADE_POINTS = { 'A+': 10, A: 9, 'B+': 8, B: 7, C: 6, P: 5 }
@@ -74,9 +98,15 @@ function makeRandom(seed) {
   }
 }
 
-function buildMarks(index, department) {
+function studentYear(index) {
+  return STUDENT_YEARS[STUDENT_YEAR_BY_INDEX[index] || 0]
+}
+
+function buildMarks(index, department, year) {
   const random = makeRandom(97 + index * 13)
-  const courses = DEPARTMENT_COURSES[department] || []
+  const courses = (DEPARTMENT_COURSES[department] || []).filter((course) =>
+    (COURSE_YEARS[course.code] || []).includes(year)
+  )
   const marks = courses.map((course) => {
     const internal = 17 + Math.floor(random() * 14) // /30
     const external = 32 + Math.floor(random() * 37) // /70
@@ -105,10 +135,10 @@ function pad(number) {
 function student(index) {
   const name = STUDENT_NAMES[index]
   const department = DEPARTMENTS[index % 3]
-  const year = 2 + (index % 3)
-  const semester = year * 2 - 1
+  const year = studentYear(index)
+  const semesterNumber = (STUDENT_YEARS.indexOf(year) * 2) + 1
   const roll = `${department === 'Information Technology' ? 'IT' : department === 'Electronics and Communication' ? 'EC' : 'CS'}-2024-${pad(11 + index * 3)}`
-  const { marks, credits, gpa } = buildMarks(index, department)
+  const { marks, credits, gpa } = buildMarks(index, department, year)
 
   return {
     id: roll,
@@ -117,8 +147,8 @@ function student(index) {
     email: `${roll.toLowerCase()}@college.edu`,
     phone: `+91 9${String(84210100 + index * 137).slice(0, 8)}`,
     department,
-    year: `${year}${year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} year`,
-    semester: `Semester ${semester}`,
+    year,
+    semester: `Semester ${semesterNumber}`,
     enrolled: `2024`,
     marks,
     entries: {},
@@ -144,9 +174,9 @@ const FACULTY = [
       { code: 'CS 411', title: 'Machine learning', semester: 'Semester 7', students: 5 },
     ],
     assignments: [
-      { id: 'CS401-MID', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
-      { id: 'CS401-END', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'End-semester', due: '28 Nov 2026' },
-      { id: 'CS411-MID', code: 'CS 411', title: 'Machine learning', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
+      { id: 'CS401-MID', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
+      { id: 'CS401-END', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'End-semester', year: '2nd year', due: '28 Nov 2026' },
+      { id: 'CS411-MID', code: 'CS 411', title: 'Machine learning', credits: 4, exam: 'Mid-term', year: '3rd year', due: '12 Jun 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -167,10 +197,10 @@ const FACULTY = [
       { code: 'CS 412', title: 'Machine learning lab', semester: 'Semester 7', students: 5 },
     ],
     assignments: [
-      { id: 'CS402-MID', code: 'CS 402', title: 'Distributed systems', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
-      { id: 'CS406-LAB', code: 'CS 406', title: 'Distributed systems lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
-      { id: 'CS405-LAB', code: 'CS 405', title: 'Compilers lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
-      { id: 'CS412-LAB', code: 'CS 412', title: 'Machine learning lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
+      { id: 'CS402-MID', code: 'CS 402', title: 'Distributed systems', credits: 4, exam: 'Mid-term', year: '2nd year', due: '12 Jun 2026' },
+      { id: 'CS406-LAB', code: 'CS 406', title: 'Distributed systems lab', credits: 2, exam: 'Lab record', year: '2nd year', due: '04 Dec 2026' },
+      { id: 'CS405-LAB', code: 'CS 405', title: 'Compilers lab', credits: 2, exam: 'Lab record', year: '2nd year', due: '04 Dec 2026' },
+      { id: 'CS412-LAB', code: 'CS 412', title: 'Machine learning lab', credits: 2, exam: 'Lab record', year: '3rd year', due: '04 Dec 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -189,9 +219,9 @@ const FACULTY = [
       { code: 'HS 208', title: 'Technical writing', semester: 'Semester 3', students: 5 },
     ],
     assignments: [
-      { id: 'CS403-MID', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'Mid-term', due: '12 Jun 2026' },
-      { id: 'CS403-END', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'End-semester', due: '28 Nov 2026' },
-      { id: 'HS208-END', code: 'HS 208', title: 'Technical writing', credits: 2, exam: 'End-semester', due: '28 Nov 2026' },
+      { id: 'CS403-MID', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
+      { id: 'CS403-END', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'End-semester', year: '1st year', due: '28 Nov 2026' },
+      { id: 'HS208-END', code: 'HS 208', title: 'Technical writing', credits: 2, exam: 'End-semester', year: '2nd year', due: '28 Nov 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -210,8 +240,9 @@ const FACULTY = [
       { code: 'EC 402', title: 'Signals and systems', semester: 'Semester 5', students: 5 },
     ],
     assignments: [
-      { id: 'EC401-MID', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
-      { id: 'EC402-MID', code: 'EC 402', title: 'Signals and systems', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
+      { id: 'EC401-INTRO', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
+      { id: 'EC401-MID', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', year: '2nd year', due: '12 Jun 2026' },
+      { id: 'EC402-MID', code: 'EC 402', title: 'Signals and systems', credits: 4, exam: 'Mid-term', year: '3rd year', due: '12 Jun 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -221,6 +252,7 @@ function addPublishedEntries(record) {
   const assignments = FACULTY
     .filter((faculty) => faculty.department === record.department)
     .flatMap((faculty) => faculty.assignments)
+    .filter((assignment) => assignment.year === record.year)
 
   const entries = Object.fromEntries(
     assignments.map((assignment) => {
@@ -232,6 +264,7 @@ function addPublishedEntries(record) {
           title: assignment.title,
           credits: assignment.credits,
           exam: assignment.exam,
+          year: assignment.year,
           internal: mark.internal,
           external: mark.external,
           total: mark.total,

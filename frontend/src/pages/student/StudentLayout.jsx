@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { BookOpen, ClipboardList, FileText, Settings, User } from 'lucide-react'
 import Shell from '../../components/dashboard/Shell'
 import { usePortal } from '../../lib/usePortal'
+import { yearForStudent } from '../../lib/portal'
 
 export const STUDENT_ITEMS = [
   { to: 'profile', label: 'Profile', sub: 'Your record and the details the college holds', icon: User },
@@ -29,7 +30,7 @@ export default function StudentLayout() {
       record={record}
       items={STUDENT_ITEMS}
       source={source}
-      context={[record.semester, record.year].filter(Boolean).join(' · ')}
+      context={[record.semester, yearForStudent(record)].filter(Boolean).join(' · ')}
     >
       {syncError && <p className="portal-sync-warning" role="alert">{syncError}</p>}
       <Outlet context={{ record, source }} />

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Loader2, Search } from 'lucide-react'
 import { listRecords } from '../../lib/db'
-import { facultyStudents, markFor } from '../../lib/portal'
+import { facultyStudents, markFor, yearForStudent } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 export default function FacultyStudents() {
@@ -79,8 +79,8 @@ export default function FacultyStudents() {
     return (
       <div className="page">
         <EmptyState
-          title="No students on your courses yet"
-          body="Students appear here as soon as their record carries one of the courses you hold."
+          title="No students in your branch yet"
+          body="Students appear here as soon as they register with your branch."
         />
       </div>
     )
@@ -133,6 +133,7 @@ export default function FacultyStudents() {
               <tr>
                 <th scope="col">Student</th>
                 <th scope="col">Branch</th>
+                <th scope="col">Year</th>
                 <th scope="col">Marks published by you</th>
                 <th scope="col" className="num">
                   Average
@@ -158,6 +159,7 @@ export default function FacultyStudents() {
                     </span>
                   </td>
                   <td className="mono-cell">{student.department}</td>
+                  <td className="mono-cell">{yearForStudent(student) || '—'}</td>
                   <td>
                     <span className="mark-chips">
                       {marks.map(({ course: entry, mark }) => (

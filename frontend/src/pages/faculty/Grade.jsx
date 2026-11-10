@@ -3,7 +3,8 @@ import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { Loader2, Plus, Save, Send, X } from 'lucide-react'
 import { listRecords, saveAccount } from '../../lib/db'
 import { gradeFor, MAX_EXTERNAL, MAX_INTERNAL } from '../../lib/grades'
-import { entryFor, rosterFor, saveAssignment } from '../../lib/portal'
+import { entryFor, rosterFor, saveAssignment, yearForAssignment } from '../../lib/portal'
+import { STUDENT_YEARS } from '../../lib/seedData'
 import Toast from '../../components/dashboard/Toast'
 import { EmptyState } from '../../components/dashboard/Bits'
 
@@ -23,9 +24,16 @@ export default function FacultyGrade() {
   const [toast, setToast] = useState('')
   const [toastTone, setToastTone] = useState('ok')
   const [showExamForm, setShowExamForm] = useState(false)
-  const [examForm, setExamForm] = useState({ code: '', title: '', exam: '', credits: '3' })
+  const [examForm, setExamForm] = useState({
+    code: '',
+    title: '',
+    exam: '',
+    year: STUDENT_YEARS[0],
+    credits: '3',
+  })
   const [examError, setExamError] = useState('')
   const [showMissingPrompt, setShowMissingPrompt] = useState(false)
+  const [savePrompt, setSavePrompt] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -38,11 +46,16 @@ export default function FacultyGrade() {
 
       const next = {}
       if (assignment) {
-        for (const student of rosterFor(records, assignment.code, department)) {
+        for (const student of rosterFor(
+          records,
+          assignment.code,
+          department,
+          yearForAssignment(assignment)
+        )) {
           const entry = entryFor(student, assignment.id)
           next[student.id] = {
-            internal: entry ? String(entry.internal) : '',
-            external: entry ? String(entry.external) : '',
+            internal: entry?.internal === undefined ? '' : String(entry.internal),
+            external: entry?.external === undefined ? '' : String(entry.external),
             published: Boolean(entry?.published),
           }
         }
@@ -54,7 +67,7 @@ export default function FacultyGrade() {
     } finally {
       setLoading(false)
     }
-  }, [assignment, department])
+  }, [assignment, department, source])
 
   useEffect(() => {
     load()
@@ -67,7 +80,10 @@ export default function FacultyGrade() {
   }, [toast])
 
   const roster = useMemo(
-    () => (assignment ? rosterFor(students, assignment.code, department) : []),
+    () =>
+      assignment
+        ? rosterFor(students, assignment.code, department, yearForAssignment(assignment))
+        : [],
     [students, assignment, department]
   )
 
@@ -86,6 +102,16 @@ export default function FacultyGrade() {
 
   const complete = rows.filter((row) => row.complete)
   const missing = rows.filter((row) => !row.complete)
+  const changedRows = rows.filter(({ student, entry }) => {
+    const saved = entryFor(student, assignment?.id)
+    const savedInternal = saved?.internal === undefined ? '' : String(saved.internal)
+    const savedExternal = saved?.external === undefined ? '' : String(saved.external)
+    return entry.internal !== savedInternal || entry.external !== savedExternal
+  })
+  const needsPublish = rows.filter(
+    ({ student, complete: isComplete }) =>
+      isComplete && !entryFor(student, assignment?.id)?.published
+  )
   const average = complete.length
     ? Math.round(complete.reduce((sum, row) => sum + row.total, 0) / complete.length)
     : 0
@@ -101,11 +127,18 @@ export default function FacultyGrade() {
   }
 
   const submit = async (publish) => {
+    if (!changedRows.length && (!publish || !needsPublish.length)) return
     if (publish && complete.length < rows.length) {
       setShowMissingPrompt(true)
       return
     }
 
+    setSavePrompt(publish ? 'publish' : 'draft')
+  }
+
+  const confirmSave = async () => {
+    const publish = savePrompt === 'publish'
+    setSavePrompt('')
     setBusy(publish ? 'publish' : 'draft')
     try {
       const result = await saveAssignment({
@@ -136,8 +169,8 @@ export default function FacultyGrade() {
     const title = examForm.title.trim()
     const exam = examForm.exam.trim()
     const credits = Number(examForm.credits)
-    if (!code || !title || !exam || !Number.isInteger(credits) || credits < 1 || credits > 10) {
-      setExamError('Enter a course code, subject, exam name and valid credits.')
+    if (!code || !title || !exam || !STUDENT_YEARS.includes(examForm.year) || !Number.isInteger(credits) || credits < 1 || credits > 10) {
+      setExamError('Enter a course code, subject, exam, year and valid credits.')
       return
     }
 
@@ -145,10 +178,19 @@ export default function FacultyGrade() {
     setExamError('')
     try {
       const id = `${code.replace(/[^A-Z0-9]+/g, '')}-${Date.now().toString(36).toUpperCase()}`
-      const newAssignment = { id, code, title, credits, exam, due: 'Not set' }
+      const newAssignment = {
+        id,
+        code,
+        title,
+        credits,
+        exam,
+        year: examForm.year,
+        due: 'Not set',
+      }
       const courses = [...(record.courses || [])]
       const courseIndex = courses.findIndex((item) => item.code === code)
-      const course = { code, title, semester: record.semester || 'Current term', students: roster.length }
+      const semester = `Semester ${(STUDENT_YEARS.indexOf(examForm.year) * 2) + 1}`
+      const course = { code, title, semester, students: rosterFor(students, code, department, examForm.year).length }
       if (courseIndex >= 0) courses[courseIndex] = { ...courses[courseIndex], ...course }
       else courses.push(course)
 
@@ -159,7 +201,7 @@ export default function FacultyGrade() {
       }
       await saveAccount(updated, { requireRemote: source === 'firebase' })
       updateRecord(updated)
-      setExamForm({ code: '', title: '', exam: '', credits: '3' })
+      setExamForm({ code: '', title: '', exam: '', year: STUDENT_YEARS[0], credits: '3' })
       setShowExamForm(false)
       setParams({ exam: id })
       setToastTone('ok')
@@ -196,7 +238,9 @@ export default function FacultyGrade() {
           <div className="panel-head">
             <div>
               <h3 className="panel-title">Add an exam</h3>
-              <p className="panel-sub">This exam will be available to all students in {department}.</p>
+              <p className="panel-sub">
+                This exam will be available to {examForm.year} students in {department}.
+              </p>
             </div>
             <button
               type="button"
@@ -234,6 +278,16 @@ export default function FacultyGrade() {
                 placeholder="Mid-term"
                 required
               />
+            </label>
+            <label>
+              <span>Year</span>
+              <select
+                value={examForm.year}
+                onChange={(event) => setExamForm((current) => ({ ...current, year: event.target.value }))}
+                required
+              >
+                {STUDENT_YEARS.map((year) => <option key={year} value={year}>{year}</option>)}
+              </select>
             </label>
             <label>
               <span>Course credits</span>
@@ -284,7 +338,7 @@ export default function FacultyGrade() {
               onClick={() => setParams({ exam: item.id })}
             >
               <span className="exam-tab-code">{item.code}</span>
-              <span>{item.exam}</span>
+              <span>{item.exam} · {yearForAssignment(item)}</span>
             </button>
           )
         })}
@@ -294,7 +348,7 @@ export default function FacultyGrade() {
         <div className="panel-head grade-head">
           <div>
             <h3 className="panel-title">
-              {assignment?.code} &middot; {assignment?.exam}
+              {assignment?.code} &middot; {assignment?.exam} &middot; {yearForAssignment(assignment)}
             </h3>
             <p className="panel-sub">
               Internal out of {MAX_INTERNAL}, exam out of {MAX_EXTERNAL}. Totals and grades
@@ -315,7 +369,9 @@ export default function FacultyGrade() {
             <Loader2 size={16} className="spin" /> Loading your students…
           </p>
         ) : rows.length === 0 ? (
-        <p className="grade-loading">No students are registered in this branch yet.</p>
+        <p className="grade-loading">
+          No students are registered in {yearForAssignment(assignment)} of this branch yet.
+        </p>
         ) : (
           <div className="table-scroll">
             <table className="grade-table">
@@ -390,16 +446,18 @@ export default function FacultyGrade() {
 
         <div className="grade-actions">
           <p className="grade-note">
-            {rows.length - complete.length > 0
-              ? `${rows.length - complete.length} students still need a mark`
-              : 'Every student has a mark in this exam'}
+            {changedRows.length
+              ? `${changedRows.length} unsaved change${changedRows.length === 1 ? '' : 's'}`
+            : needsPublish.length
+              ? `${needsPublish.length} complete draft${needsPublish.length === 1 ? '' : 's'} ready to publish`
+              : 'All marks are saved'}
           </p>
           <div className="grade-buttons">
             <button
               type="button"
               className="btn btn--ghost btn--sm"
-              onClick={() => submit(false)}
-              disabled={Boolean(busy) || complete.length === 0}
+              onClick={() => setSavePrompt('draft')}
+              disabled={Boolean(busy) || changedRows.length === 0}
             >
               {busy === 'draft' ? (
                 <span className="btn-busy">
@@ -415,15 +473,15 @@ export default function FacultyGrade() {
               type="button"
               className="btn btn--primary btn--sm"
               onClick={() => submit(true)}
-              disabled={Boolean(busy) || complete.length === 0}
+              disabled={Boolean(busy) || (changedRows.length === 0 && needsPublish.length === 0)}
             >
               {busy === 'publish' ? (
                 <span className="btn-busy">
-                  <Loader2 size={15} className="spin" /> Publishing…
+                  <Loader2 size={15} className="spin" /> Saving…
                 </span>
               ) : (
                 <span className="btn-busy">
-                  <Send size={15} strokeWidth={1.8} /> Publish results
+                  <Send size={15} strokeWidth={1.8} /> Save marks
                 </span>
               )}
             </button>
@@ -448,6 +506,38 @@ export default function FacultyGrade() {
             <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowMissingPrompt(false)}>
               Return to marks
             </button>
+          </section>
+        </div>
+      )}
+      {savePrompt && (
+        <div className="grade-dialog-backdrop">
+          <section className="grade-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-marks-title">
+            <h3 id="confirm-marks-title">
+              {savePrompt === 'publish' ? 'Save and publish marks?' : 'Save mark changes?'}
+            </h3>
+            <p>
+              {savePrompt === 'publish'
+                ? `This updates results for ${complete.length} ${yearForAssignment(assignment)} students. Their marks, average and GPA will recalculate.`
+                : `Save these draft changes for ${changedRows.length} students? Student results will not update until you publish.`}
+            </p>
+            <div className="exam-create-actions">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={() => setSavePrompt('')}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={confirmSave}
+                disabled={Boolean(busy)}
+              >
+                {busy ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
+                Confirm save
+              </button>
+            </div>
           </section>
         </div>
       )}
