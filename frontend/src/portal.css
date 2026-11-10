@@ -1,0 +1,584 @@
+/* ===================================================================
+   Portal extras — grading sheet, lists, logout countdown, toasts
+   =================================================================== */
+
+.spin {
+  animation: dash-spin 0.8s linear infinite;
+}
+
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Sidebar context and top bar chrome ------------------------------ */
+
+.dash-brand {
+  cursor: default;
+}
+
+.dash-context {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--p-muted);
+  opacity: 0.85;
+}
+
+.dash-nav-label {
+  padding: 0 12px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--p-muted);
+  opacity: 0.75;
+}
+
+.dash-date {
+  background: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.dash-avatar--top {
+  width: 32px;
+  height: 32px;
+  font-size: 10.5px;
+  border: 1px solid var(--line);
+}
+
+.dash-top {
+  box-shadow: inset 0 -1px 0 rgba(6, 82, 92, 0.04);
+}
+
+.panel {
+  box-shadow: 0 1px 2px rgba(6, 82, 92, 0.04);
+}
+
+.panel-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--p-muted);
+}
+
+/* --- Exam switcher ---------------------------------------------------- */
+
+.exam-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exam-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13.5px;
+  color: var(--p-muted);
+  transition: color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.exam-tab:hover {
+  color: var(--p-ink);
+  border-color: var(--line-strong);
+}
+
+.exam-tab.is-active {
+  background: var(--p-ink);
+  border-color: var(--p-ink);
+  color: #fff;
+}
+
+.exam-tab-code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  opacity: 0.78;
+}
+
+/* --- Grade sheet ------------------------------------------------------ */
+
+.grade-panel {
+  padding: 22px 0 0;
+}
+
+.grade-head {
+  padding: 0 24px 18px;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.grade-summary {
+  display: flex;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.grade-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  font-size: 13.5px;
+  color: var(--p-muted);
+}
+
+.grade-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.grade-table th {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--p-bg);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--p-muted);
+  white-space: nowrap;
+}
+
+.grade-table th.num {
+  text-align: right;
+}
+
+.grade-table td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+
+.grade-table tbody tr:hover td {
+  background: rgba(235, 240, 238, 0.4);
+}
+
+.grade-table .col-mark {
+  width: 132px;
+}
+
+.grade-table .num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.mark-input {
+  width: 66px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: right;
+  color: var(--p-ink);
+  transition: border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+}
+
+.mark-input::placeholder {
+  color: #a9b8ba;
+}
+
+.mark-input:hover {
+  border-color: rgba(6, 82, 92, 0.36);
+}
+
+.mark-input:focus {
+  outline: none;
+  border-color: var(--p-ink);
+  box-shadow: 0 0 0 3px rgba(6, 82, 92, 0.1);
+}
+
+.grade-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--p-bg);
+  border-radius: 0 0 16px 16px;
+}
+
+.grade-note {
+  font-size: 13px;
+  color: var(--p-muted);
+}
+
+.grade-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Lists, filters, search -------------------------------------------- */
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--p-muted);
+  transition: color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.filter-chip:hover {
+  color: var(--p-ink);
+  border-color: var(--line-strong);
+}
+
+.filter-chip.is-active {
+  background: var(--p-surface);
+  border-color: var(--line-strong);
+  color: var(--p-ink);
+  font-weight: 500;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--p-muted);
+  min-width: 220px;
+}
+
+.search:focus-within {
+  border-color: var(--p-ink);
+  box-shadow: 0 0 0 3px rgba(6, 82, 92, 0.1);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--p-ink);
+}
+
+.search input::placeholder {
+  color: var(--p-muted);
+}
+
+.students-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.students-table th {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--p-muted);
+  white-space: nowrap;
+}
+
+.students-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+
+.students-table tbody tr:hover td {
+  background: rgba(235, 240, 238, 0.4);
+}
+
+.students-table .num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.students-table th:nth-child(1) {
+  width: 32%;
+}
+
+.students-table th:nth-child(2) {
+  width: 24%;
+}
+
+.students-table th:nth-child(4) {
+  width: 96px;
+}
+
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--p-surface);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--p-ink);
+  flex-shrink: 0;
+}
+
+.mark-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mark-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--p-bg);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--p-muted);
+}
+
+.mark-chip b {
+  font-weight: 500;
+  color: var(--p-ink);
+}
+
+/* --- Result spread ------------------------------------------------------ */
+
+.spread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+}
+
+.spread-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 12px;
+}
+
+.spread-grade {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--p-muted);
+}
+
+.spread-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--p-surface);
+  overflow: hidden;
+}
+
+.spread-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--p-ink);
+}
+
+.spread-count {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-align: right;
+  color: var(--p-ink);
+}
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+.pending-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pending-row:last-child {
+  border-bottom: none;
+}
+
+/* --- Toast --------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--p-ink);
+  font-size: 13.5px;
+  box-shadow: 0 18px 40px -24px rgba(3, 45, 52, 0.55);
+  transform: translateX(-50%);
+}
+
+.toast-mark {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--p-ok);
+  color: #fff;
+}
+
+/* --- Logout countdown ---------------------------------------------------- */
+
+.logout-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.logout-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 45, 52, 0.32);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.logout-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(380px, 100%);
+  padding: 24px 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 70px -40px rgba(3, 45, 52, 0.6);
+  overflow: hidden;
+}
+
+.logout-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--p-surface);
+  color: var(--p-ink);
+}
+
+.logout-title {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--p-ink);
+}
+
+.logout-count {
+  display: inline-block;
+  min-width: 16px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--p-ink);
+}
+
+.logout-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--p-muted);
+}
+
+.logout-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--p-surface);
+  overflow: hidden;
+}
+
+.logout-bar span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--p-ink);
+  transform-origin: left center;
+}
+
+/* --- Small screens -------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .grade-head {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .grade-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grade-buttons .btn {
+    flex: 1;
+  }
+
+  .list-toolbar {
+    align-items: stretch;
+  }
+
+  .search {
+    min-width: 0;
+  }
+}

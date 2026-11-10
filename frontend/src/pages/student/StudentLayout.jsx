@@ -25,7 +25,12 @@ export default function StudentLayout() {
   }
 
   return (
-    <Shell record={record} items={STUDENT_ITEMS} source={source}>
+    <Shell
+      record={record}
+      items={STUDENT_ITEMS}
+      source={source}
+      context={[record.semester, record.year].filter(Boolean).join(' · ')}
+    >
       <Outlet context={{ record, source }} />
     </Shell>
   )

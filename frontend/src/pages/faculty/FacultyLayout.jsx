@@ -25,7 +25,12 @@ export default function FacultyLayout() {
   }
 
   return (
-    <Shell record={record} items={FACULTY_ITEMS} source={source}>
+    <Shell
+      record={record}
+      items={FACULTY_ITEMS}
+      source={source}
+      context={[record.designation, record.department].filter(Boolean).join(' · ')}
+    >
       <Outlet context={{ record, source }} />
     </Shell>
   )

@@ -5,6 +5,7 @@ import Auth from './pages/Auth'
 import ComingSoon from './components/dashboard/ComingSoon'
 import './App.css'
 import './dash.css'
+import './portal.css'
 
 const StudentLayout = lazy(() => import('./pages/student/StudentLayout'))
 const StudentProfile = lazy(() => import('./pages/student/Profile'))
@@ -12,6 +13,9 @@ const StudentMarks = lazy(() => import('./pages/student/Marks'))
 const FacultyLayout = lazy(() => import('./pages/faculty/FacultyLayout'))
 const FacultyProfile = lazy(() => import('./pages/faculty/Profile'))
 const FacultyAssigned = lazy(() => import('./pages/faculty/Assignments'))
+const FacultyGrade = lazy(() => import('./pages/faculty/Grade'))
+const FacultyResults = lazy(() => import('./pages/faculty/Results'))
+const FacultyStudents = lazy(() => import('./pages/faculty/Students'))
 
 function PortalLoading() {
   return (
@@ -76,39 +80,9 @@ export default function App() {
           <Route index element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<FacultyProfile />} />
           <Route path="assigned" element={<FacultyAssigned />} />
-          <Route
-            path="grade"
-            element={
-              <ComingSoon
-                title="Enter marks"
-                body="Pick an assigned exam, type internal and exam marks against your student list, and publish in one action. Nothing is retyped into a second sheet."
-                backTo="assigned"
-                backLabel="Back to assigned exams"
-              />
-            }
-          />
-          <Route
-            path="results"
-            element={
-              <ComingSoon
-                title="Class results"
-                body="The grade spread for a course once marks are in: how many passed, where the class average sits, and who is still pending."
-                backTo="assigned"
-                backLabel="Back to assigned exams"
-              />
-            }
-          />
-          <Route
-            path="students"
-            element={
-              <ComingSoon
-                title="Students"
-                body="Everyone enrolled in the courses you teach, with their roll number, marks so far and the exams still open."
-                backTo="assigned"
-                backLabel="Back to assigned exams"
-              />
-            }
-          />
+          <Route path="grade" element={<FacultyGrade />} />
+          <Route path="results" element={<FacultyResults />} />
+          <Route path="students" element={<FacultyStudents />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

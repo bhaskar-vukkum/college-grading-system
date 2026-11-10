@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
+import { listRecords } from '../../lib/db'
+import { entryFor, rosterFor } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 const STATUS = {
@@ -12,6 +14,43 @@ const STATUS = {
 export default function FacultyAssigned() {
   const { record } = useOutletContext()
   const assignments = record.assignments || []
+  const [students, setStudents] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let alive = true
+    listRecords('student').then(({ records }) => {
+      if (!alive) return
+      setStudents(records)
+      setLoading(false)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const rows = assignments.map((assignment) => {
+    const roster = rosterFor(students, assignment.code)
+    const graded = roster.filter((student) => entryFor(student, assignment.id)).length
+    const published = roster.filter((student) => entryFor(student, assignment.id)?.published).length
+    const status =
+      roster.length > 0 && published === roster.length
+        ? 'Published'
+        : graded > 0
+          ? 'Grading'
+          : 'Open'
+    return { ...assignment, roster: roster.length, graded, published, status }
+  })
+
+  if (loading) {
+    return (
+      <div className="page">
+        <p className="grade-loading">
+          <Loader2 size={16} className="spin" /> Loading your exams…
+        </p>
+      </div>
+    )
+  }
 
   if (assignments.length === 0) {
     return (
@@ -39,16 +78,17 @@ export default function FacultyAssigned() {
                 <th scope="col">Course and exam</th>
                 <th scope="col">Due</th>
                 <th scope="col">Graded</th>
+                <th scope="col">Published</th>
                 <th scope="col">Status</th>
                 <th scope="col" />
               </tr>
             </thead>
             <tbody>
-              {assignments.map((item) => {
+              {rows.map((item) => {
                 const status = STATUS[item.status] || STATUS.Open
-                const done = item.students ? Math.round((item.submitted / item.students) * 100) : 0
+                const percent = item.roster ? Math.round((item.graded / item.roster) * 100) : 0
                 return (
-                  <tr key={`${item.code}-${item.exam}`}>
+                  <tr key={item.id}>
                     <td>
                       <span className="course">
                         <span className="course-code">{item.code}</span>
@@ -59,18 +99,21 @@ export default function FacultyAssigned() {
                     <td>
                       <span className="progress">
                         <span className="progress-track">
-                          <span className="progress-fill" style={{ width: `${done}%` }} />
+                          <span className="progress-fill" style={{ width: `${percent}%` }} />
                         </span>
                         <span className="progress-label">
-                          {item.submitted}/{item.students}
+                          {item.graded}/{item.roster}
                         </span>
                       </span>
+                    </td>
+                    <td className="mono-cell">
+                      {item.published}/{item.roster}
                     </td>
                     <td>
                       <span className={`status-chip is-${status.tone}`}>{status.label}</span>
                     </td>
                     <td className="row-action">
-                      <Link to="../grade" relative="path" className="row-link">
+                      <Link to={`../grade?exam=${item.id}`} relative="path" className="row-link">
                         Enter marks
                         <ArrowRight size={14} strokeWidth={1.8} />
                       </Link>
