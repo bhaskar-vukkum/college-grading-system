@@ -31,6 +31,9 @@ function encode(value) {
   if (typeof value === 'string') return { stringValue: value }
   if (typeof value === 'boolean') return { booleanValue: value }
   if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new TypeError(`Firestore cannot store non-finite number: ${value}`)
+    }
     return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value }
   }
   if (Array.isArray(value)) return { arrayValue: { values: value.map(encode) } }
@@ -74,12 +77,14 @@ async function main() {
   ]
 
   let written = 0
+  let failed = 0
   for (const job of jobs) {
     try {
       await put(job.collection, job.document)
       written += 1
       process.stdout.write(`  ok   ${job.collection}/${job.id}\n`)
     } catch (error) {
+      failed += 1
       process.stdout.write(`  fail ${job.collection}/${job.id} — ${error.message}\n`)
       if (error.message.includes('403')) {
         console.log(
@@ -94,6 +99,7 @@ async function main() {
   }
 
   console.log(`\nSeeded ${written} of ${jobs.length} records into ${PROJECT}.`)
+  if (failed) process.exitCode = 1
   console.log(`Demo password for every seeded account: ${DEMO_PASSWORD}`)
 }
 

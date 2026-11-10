@@ -125,7 +125,7 @@ function buildMarks(index, department, year) {
   const credits = marks.reduce((sum, mark) => sum + mark.credits, 0)
   const points = marks.reduce((sum, mark) => sum + GRADE_POINTS[mark.grade] * mark.credits, 0)
 
-  return { marks, credits, gpa: Math.round((points / credits) * 100) / 100 }
+  return { marks, credits, gpa: credits ? Math.round((points / credits) * 100) / 100 : 0 }
 }
 
 function pad(number) {
@@ -170,13 +170,10 @@ const FACULTY = [
     office: 'CS Block · 214',
     joined: '2014',
     courses: [
-      { code: 'CS 401', title: 'Compilers and optimization', semester: 'Semester 5', students: 5 },
-      { code: 'CS 411', title: 'Machine learning', semester: 'Semester 7', students: 5 },
+      { code: 'CS 401', title: 'Compilers and optimization', semester: 'Semester 3', students: 2 },
     ],
     assignments: [
-      { id: 'CS401-MID', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
       { id: 'CS401-END', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'End-semester', year: '2nd year', due: '28 Nov 2026' },
-      { id: 'CS411-MID', code: 'CS 411', title: 'Machine learning', credits: 4, exam: 'Mid-term', year: '3rd year', due: '12 Jun 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -190,18 +187,8 @@ const FACULTY = [
     designation: 'Professor',
     office: 'CS Block · 208',
     joined: '2009',
-    courses: [
-      { code: 'CS 402', title: 'Distributed systems', semester: 'Semester 6', students: 5 },
-      { code: 'CS 406', title: 'Distributed systems lab', semester: 'Semester 6', students: 5 },
-      { code: 'CS 405', title: 'Compilers lab', semester: 'Semester 5', students: 5 },
-      { code: 'CS 412', title: 'Machine learning lab', semester: 'Semester 7', students: 5 },
-    ],
-    assignments: [
-      { id: 'CS402-MID', code: 'CS 402', title: 'Distributed systems', credits: 4, exam: 'Mid-term', year: '2nd year', due: '12 Jun 2026' },
-      { id: 'CS406-LAB', code: 'CS 406', title: 'Distributed systems lab', credits: 2, exam: 'Lab record', year: '2nd year', due: '04 Dec 2026' },
-      { id: 'CS405-LAB', code: 'CS 405', title: 'Compilers lab', credits: 2, exam: 'Lab record', year: '2nd year', due: '04 Dec 2026' },
-      { id: 'CS412-LAB', code: 'CS 412', title: 'Machine learning lab', credits: 2, exam: 'Lab record', year: '3rd year', due: '04 Dec 2026' },
-    ],
+    courses: [],
+    assignments: [],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
   {
@@ -214,15 +201,8 @@ const FACULTY = [
     designation: 'Assistant professor',
     office: 'IT Block · 106',
     joined: '2019',
-    courses: [
-      { code: 'CS 403', title: 'Numerical methods', semester: 'Semester 3', students: 5 },
-      { code: 'HS 208', title: 'Technical writing', semester: 'Semester 3', students: 5 },
-    ],
-    assignments: [
-      { id: 'CS403-MID', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
-      { id: 'CS403-END', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'End-semester', year: '1st year', due: '28 Nov 2026' },
-      { id: 'HS208-END', code: 'HS 208', title: 'Technical writing', credits: 2, exam: 'End-semester', year: '2nd year', due: '28 Nov 2026' },
-    ],
+    courses: [],
+    assignments: [],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
   {
@@ -235,15 +215,8 @@ const FACULTY = [
     designation: 'Assistant professor',
     office: 'ECE Block · 108',
     joined: '2021',
-    courses: [
-      { code: 'EC 401', title: 'Electronic circuits', semester: 'Semester 5', students: 5 },
-      { code: 'EC 402', title: 'Signals and systems', semester: 'Semester 5', students: 5 },
-    ],
-    assignments: [
-      { id: 'EC401-INTRO', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', year: '1st year', due: '12 Jun 2026' },
-      { id: 'EC401-MID', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', year: '2nd year', due: '12 Jun 2026' },
-      { id: 'EC402-MID', code: 'EC 402', title: 'Signals and systems', credits: 4, exam: 'Mid-term', year: '3rd year', due: '12 Jun 2026' },
-    ],
+    courses: [],
+    assignments: [],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
 ]
