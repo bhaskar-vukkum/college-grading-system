@@ -61,6 +61,148 @@
   color: var(--p-muted);
 }
 
+.portal-sync-warning {
+  padding: 12px 14px;
+  border: 1px solid rgba(171, 106, 34, 0.24);
+  border-radius: 10px;
+  background: #fbf5eb;
+  color: #82521c;
+  font-size: 13px;
+}
+
+.branch-setup-form {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin-top: 16px;
+}
+
+.branch-setup-form label,
+.exam-create-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--p-muted);
+}
+
+.branch-select,
+.exam-create-form input {
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--p-ink);
+  font: inherit;
+}
+
+.branch-select:focus,
+.exam-create-form input:focus {
+  outline: none;
+  border-color: var(--p-ink);
+  box-shadow: 0 0 0 3px rgba(6, 82, 92, 0.1);
+}
+
+.grade-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.grade-page-head .btn,
+.branch-setup-form .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.exam-create {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.exam-create .panel-head {
+  align-items: flex-start;
+}
+
+.exam-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--p-muted);
+}
+
+.exam-create-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.exam-create-form > .field-error,
+.exam-create-actions {
+  grid-column: 1 / -1;
+}
+
+.exam-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.exam-create-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.grade-dialog-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 31, 33, 0.45);
+}
+
+.grade-dialog {
+  width: min(100%, 440px);
+  max-height: min(80vh, 620px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 31, 33, 0.2);
+}
+
+.grade-dialog h3 {
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.grade-dialog p,
+.grade-dialog li {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--p-muted);
+}
+
+.grade-dialog ul {
+  display: grid;
+  gap: 5px;
+  max-height: 220px;
+  overflow: auto;
+  margin: 14px 0;
+  padding-left: 18px;
+}
+
 /* --- Exam switcher ---------------------------------------------------- */
 
 .exam-switch {
@@ -470,6 +612,10 @@
   color: #fff;
 }
 
+.toast.is-error .toast-mark {
+  background: #b64334;
+}
+
 /* --- Logout countdown ---------------------------------------------------- */
 
 .logout-layer {
@@ -560,6 +706,14 @@
 /* --- Small screens -------------------------------------------------------- */
 
 @media (max-width: 860px) {
+  .exam-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .grade-page-head {
+    align-items: flex-start;
+  }
+
   .grade-head {
     flex-direction: column;
     gap: 10px;

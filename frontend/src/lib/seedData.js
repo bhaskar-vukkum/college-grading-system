@@ -1,5 +1,5 @@
 /**
- * Demo records: 15 students and 3 faculty.
+ * Demo records: 15 students across three branches and 4 faculty.
  *
  * These are the same documents the seed script writes to Firestore
  * (scripts/seed-firestore.mjs). Until the database rules allow access, the app
@@ -25,9 +25,14 @@ const STUDENT_NAMES = [
   'Riya Deshmukh',
 ]
 
-const DEPARTMENTS = ['Computer Science', 'Information Technology', 'Electronics and Communication']
-const SECTIONS = ['A', 'B', 'C']
-const ADVISORS = ['Ramesh Iyer', 'Meera Krishnan', 'Sunil Deshpande']
+export const DEPARTMENTS = [
+  'Computer Science',
+  'Information Technology',
+  'Electronics and Communication',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Mathematics',
+]
 
 const COURSE_POOL = [
   { code: 'CS 401', title: 'Compilers and optimization', credits: 4 },
@@ -38,7 +43,15 @@ const COURSE_POOL = [
   { code: 'CS 405', title: 'Compilers lab', credits: 2 },
   { code: 'CS 412', title: 'Machine learning lab', credits: 2 },
   { code: 'CS 406', title: 'Distributed systems lab', credits: 2 },
+  { code: 'EC 401', title: 'Electronic circuits', credits: 4 },
+  { code: 'EC 402', title: 'Signals and systems', credits: 4 },
 ]
+
+const DEPARTMENT_COURSES = {
+  'Computer Science': COURSE_POOL.filter((course) => course.code.startsWith('CS ') && course.code !== 'CS 403'),
+  'Information Technology': COURSE_POOL.filter((course) => ['CS 403', 'HS 208'].includes(course.code)),
+  'Electronics and Communication': COURSE_POOL.filter((course) => course.code.startsWith('EC ')),
+}
 
 const GRADE_POINTS = { 'A+': 10, A: 9, 'B+': 8, B: 7, C: 6, P: 5 }
 
@@ -61,12 +74,10 @@ function makeRandom(seed) {
   }
 }
 
-function buildMarks(index) {
+function buildMarks(index, department) {
   const random = makeRandom(97 + index * 13)
-  const start = (index * 3) % COURSE_POOL.length
-
-  const marks = Array.from({ length: 6 }, (_, slot) => {
-    const course = COURSE_POOL[(start + slot) % COURSE_POOL.length]
+  const courses = DEPARTMENT_COURSES[department] || []
+  const marks = courses.map((course) => {
     const internal = 17 + Math.floor(random() * 14) // /30
     const external = 32 + Math.floor(random() * 37) // /70
     const total = internal + external
@@ -93,11 +104,11 @@ function pad(number) {
 
 function student(index) {
   const name = STUDENT_NAMES[index]
-  const department = DEPARTMENTS[index % DEPARTMENTS.length]
+  const department = DEPARTMENTS[index % 3]
   const year = 2 + (index % 3)
   const semester = year * 2 - 1
   const roll = `${department === 'Information Technology' ? 'IT' : department === 'Electronics and Communication' ? 'EC' : 'CS'}-2024-${pad(11 + index * 3)}`
-  const { marks, credits, gpa } = buildMarks(index)
+  const { marks, credits, gpa } = buildMarks(index, department)
 
   return {
     id: roll,
@@ -108,10 +119,9 @@ function student(index) {
     department,
     year: `${year}${year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} year`,
     semester: `Semester ${semester}`,
-    section: SECTIONS[index % SECTIONS.length],
-    advisor: ADVISORS[index % ADVISORS.length],
     enrolled: `2024`,
     marks,
+    entries: {},
     credits,
     gpa,
     createdAt: '2026-07-14T09:00:00.000Z',
@@ -130,8 +140,8 @@ const FACULTY = [
     office: 'CS Block · 214',
     joined: '2014',
     courses: [
-      { code: 'CS 401', title: 'Compilers and optimization', semester: 'Semester 5', students: 48 },
-      { code: 'CS 411', title: 'Machine learning', semester: 'Semester 7', students: 41 },
+      { code: 'CS 401', title: 'Compilers and optimization', semester: 'Semester 5', students: 5 },
+      { code: 'CS 411', title: 'Machine learning', semester: 'Semester 7', students: 5 },
     ],
     assignments: [
       { id: 'CS401-MID', code: 'CS 401', title: 'Compilers and optimization', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
@@ -151,12 +161,16 @@ const FACULTY = [
     office: 'CS Block · 208',
     joined: '2009',
     courses: [
-      { code: 'CS 402', title: 'Distributed systems', semester: 'Semester 6', students: 52 },
-      { code: 'CS 406', title: 'Distributed systems lab', semester: 'Semester 6', students: 26 },
+      { code: 'CS 402', title: 'Distributed systems', semester: 'Semester 6', students: 5 },
+      { code: 'CS 406', title: 'Distributed systems lab', semester: 'Semester 6', students: 5 },
+      { code: 'CS 405', title: 'Compilers lab', semester: 'Semester 5', students: 5 },
+      { code: 'CS 412', title: 'Machine learning lab', semester: 'Semester 7', students: 5 },
     ],
     assignments: [
       { id: 'CS402-MID', code: 'CS 402', title: 'Distributed systems', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
       { id: 'CS406-LAB', code: 'CS 406', title: 'Distributed systems lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
+      { id: 'CS405-LAB', code: 'CS 405', title: 'Compilers lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
+      { id: 'CS412-LAB', code: 'CS 412', title: 'Machine learning lab', credits: 2, exam: 'Lab record', due: '04 Dec 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
@@ -170,16 +184,70 @@ const FACULTY = [
     designation: 'Assistant professor',
     office: 'IT Block · 106',
     joined: '2019',
-    courses: [{ code: 'CS 403', title: 'Numerical methods', semester: 'Semester 3', students: 64 }],
+    courses: [
+      { code: 'CS 403', title: 'Numerical methods', semester: 'Semester 3', students: 5 },
+      { code: 'HS 208', title: 'Technical writing', semester: 'Semester 3', students: 5 },
+    ],
     assignments: [
       { id: 'CS403-MID', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'Mid-term', due: '12 Jun 2026' },
       { id: 'CS403-END', code: 'CS 403', title: 'Numerical methods', credits: 3, exam: 'End-semester', due: '28 Nov 2026' },
+      { id: 'HS208-END', code: 'HS 208', title: 'Technical writing', credits: 2, exam: 'End-semester', due: '28 Nov 2026' },
+    ],
+    createdAt: '2026-07-14T09:00:00.000Z',
+  },
+  {
+    id: 'FAC-217',
+    role: 'faculty',
+    name: 'Kiran Rao',
+    email: 'kiran.rao@college.edu',
+    phone: '+91 98421 33217',
+    department: 'Electronics and Communication',
+    designation: 'Assistant professor',
+    office: 'ECE Block · 108',
+    joined: '2021',
+    courses: [
+      { code: 'EC 401', title: 'Electronic circuits', semester: 'Semester 5', students: 5 },
+      { code: 'EC 402', title: 'Signals and systems', semester: 'Semester 5', students: 5 },
+    ],
+    assignments: [
+      { id: 'EC401-MID', code: 'EC 401', title: 'Electronic circuits', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
+      { id: 'EC402-MID', code: 'EC 402', title: 'Signals and systems', credits: 4, exam: 'Mid-term', due: '12 Jun 2026' },
     ],
     createdAt: '2026-07-14T09:00:00.000Z',
   },
 ]
 
-export const STUDENTS = Array.from({ length: STUDENT_NAMES.length }, (_, index) => student(index))
+function addPublishedEntries(record) {
+  const assignments = FACULTY
+    .filter((faculty) => faculty.department === record.department)
+    .flatMap((faculty) => faculty.assignments)
+
+  const entries = Object.fromEntries(
+    assignments.map((assignment) => {
+      const mark = record.marks.find((item) => item.code === assignment.code)
+      return [
+        assignment.id,
+        {
+          code: assignment.code,
+          title: assignment.title,
+          credits: assignment.credits,
+          exam: assignment.exam,
+          internal: mark.internal,
+          external: mark.external,
+          total: mark.total,
+          grade: mark.grade,
+          published: true,
+        },
+      ]
+    })
+  )
+
+  return { ...record, entries }
+}
+
+export const STUDENTS = Array.from({ length: STUDENT_NAMES.length }, (_, index) =>
+  addPublishedEntries(student(index))
+)
 
 export const FACULTY_RECORDS = FACULTY
 

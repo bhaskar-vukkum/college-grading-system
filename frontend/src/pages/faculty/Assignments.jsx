@@ -12,25 +12,31 @@ const STATUS = {
 }
 
 export default function FacultyAssigned() {
-  const { record } = useOutletContext()
+  const { record, source } = useOutletContext()
   const assignments = record.assignments || []
+  const department = record.department
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
-    listRecords('student').then(({ records }) => {
+    listRecords('student', { requireRemote: source === 'firebase' }).then(({ records }) => {
       if (!alive) return
       setStudents(records)
       setLoading(false)
     })
+      .catch((loadError) => {
+        setError(loadError.message)
+        setLoading(false)
+      })
     return () => {
       alive = false
     }
-  }, [])
+  }, [source])
 
   const rows = assignments.map((assignment) => {
-    const roster = rosterFor(students, assignment.code)
+    const roster = rosterFor(students, assignment.code, department)
     const graded = roster.filter((student) => entryFor(student, assignment.id)).length
     const published = roster.filter((student) => entryFor(student, assignment.id)?.published).length
     const status =
@@ -52,12 +58,16 @@ export default function FacultyAssigned() {
     )
   }
 
+  if (error) {
+    return <div className="page"><p className="portal-sync-warning" role="alert">{error}</p></div>
+  }
+
   if (assignments.length === 0) {
     return (
       <div className="page">
         <EmptyState
-          title="No exams assigned yet"
-          body="When the department assigns a mid-term or end-semester exam to one of your courses, it appears here with the grading window."
+          title="No exams yet"
+          body="Add an exam from Enter marks to start grading every student in your branch."
         />
       </div>
     )

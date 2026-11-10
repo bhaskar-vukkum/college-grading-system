@@ -2,22 +2,13 @@ import React, { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
 import { register } from '../../lib/auth'
+import { DEPARTMENTS } from '../../lib/seedData'
 import { PasswordField, PasswordRules, SelectField, TextField } from './Field'
 
 const EASE = [0.22, 1, 0.36, 1]
 
-const DEPARTMENTS = [
-  'Computer Science',
-  'Information Technology',
-  'Electronics and Communication',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Mathematics',
-]
-
 const YEARS = ['1st year', '2nd year', '3rd year', '4th year']
 const SEMESTERS = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8']
-const SECTIONS = ['A', 'B', 'C']
 const DESIGNATIONS = ['Assistant professor', 'Associate professor', 'Professor', 'Lab instructor', 'Visiting faculty']
 
 const field = (key, label, extra = {}) => ({ key, label, type: 'text', ...extra })
@@ -38,10 +29,9 @@ const SCHEMA = {
       label: 'Course',
       sub: 'Where you sit in the college this term.',
       fields: [
-        { key: 'department', label: 'Department', type: 'select', options: DEPARTMENTS },
+        { key: 'department', label: 'Branch', type: 'select', options: DEPARTMENTS },
         { key: 'year', label: 'Year', type: 'select', options: YEARS },
         { key: 'semester', label: 'Semester', type: 'select', options: SEMESTERS },
-        { key: 'section', label: 'Section', type: 'select', options: SECTIONS },
       ],
     },
     { label: 'Password', type: 'password', sub: 'The password you will sign in with.' },
@@ -60,9 +50,9 @@ const SCHEMA = {
     },
     {
       label: 'Post',
-      sub: 'The department and post you hold.',
+      sub: 'The branch and post you hold.',
       fields: [
-        { key: 'department', label: 'Department', type: 'select', options: DEPARTMENTS },
+        { key: 'department', label: 'Branch', type: 'select', options: DEPARTMENTS },
         { key: 'designation', label: 'Designation', type: 'select', options: DESIGNATIONS },
         field('office', 'Office', { placeholder: 'CS Block · 214' }),
         field('joined', 'Joined the college', { placeholder: '2019', inputMode: 'numeric' }),
@@ -91,7 +81,6 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
     department: '',
     year: '1st year',
     semester: 'Semester 1',
-    section: 'A',
     designation: 'Assistant professor',
     office: '',
     joined: '',
@@ -114,10 +103,9 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
         { label: 'Roll number', value: values.identifier, step: 0 },
         { label: 'Email', value: values.email, step: 0 },
         { label: 'Phone', value: values.phone, step: 0 },
-        { label: 'Department', value: values.department, step: 1 },
+        { label: 'Branch', value: values.department, step: 1 },
         { label: 'Year', value: values.year, step: 1 },
         { label: 'Semester', value: values.semester, step: 1 },
-        { label: 'Section', value: values.section, step: 1 },
         { label: 'Password', value: values.password ? '••••••••' : '', step: 2 },
       ]
     }
@@ -126,7 +114,7 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
       { label: 'Staff ID', value: values.identifier, step: 0 },
       { label: 'Email', value: values.email, step: 0 },
       { label: 'Phone', value: values.phone, step: 0 },
-      { label: 'Department', value: values.department, step: 1 },
+      { label: 'Branch', value: values.department, step: 1 },
       { label: 'Designation', value: values.designation, step: 1 },
       { label: 'Office', value: values.office, step: 1 },
       { label: 'Joined', value: values.joined, step: 1 },
@@ -191,7 +179,7 @@ export default function RegisterPanel({ profile, onComplete, onCancel }) {
           phone: values.phone.trim(),
           department: values.department,
           ...(isStudent
-            ? { year: values.year, semester: values.semester, section: values.section, enrolled: '2026' }
+            ? { year: values.year, semester: values.semester, enrolled: '2026' }
             : { designation: values.designation, office: values.office.trim(), joined: values.joined.trim() }),
         },
       })

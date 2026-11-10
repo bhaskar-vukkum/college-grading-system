@@ -7,25 +7,34 @@ import { markFor, rosterFor } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 export default function FacultyResults() {
-  const { record } = useOutletContext()
+  const { record, source } = useOutletContext()
   const courses = record.courses || []
+  const department = record.department
   const [students, setStudents] = useState([])
   const [course, setCourse] = useState(courses[0]?.code || '')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
-    listRecords('student').then(({ records }) => {
+    listRecords('student', { requireRemote: source === 'firebase' }).then(({ records }) => {
       if (!alive) return
       setStudents(records)
       setLoading(false)
     })
+      .catch((loadError) => {
+        setError(loadError.message)
+        setLoading(false)
+      })
     return () => {
       alive = false
     }
-  }, [])
+  }, [source])
 
-  const roster = useMemo(() => rosterFor(students, course), [students, course])
+  const roster = useMemo(
+    () => rosterFor(students, course, department),
+    [students, course, department]
+  )
   const published = roster
     .map((student) => ({ student, mark: markFor(student, course) }))
     .filter((row) => row.mark)
@@ -41,6 +50,10 @@ export default function FacultyResults() {
         </p>
       </div>
     )
+  }
+
+  if (error) {
+    return <div className="page"><p className="portal-sync-warning" role="alert">{error}</p></div>
   }
 
   if (courses.length === 0) {

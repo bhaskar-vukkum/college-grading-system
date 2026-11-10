@@ -28,3 +28,19 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```bash
 npm run build
 ```
+
+## Branch rosters and grading
+
+Student rosters are matched to faculty by branch (the `department` field). All
+faculty in the same branch share that branch's roster; section is not used.
+Faculty can add exams from **Enter marks**. Publishing requires marks for every
+student in the roster and updates each student's published exam entries,
+course marks, credits, average and credit-weighted GPA. Firebase-backed student
+records receive live updates in the student portal.
+
+The demo accounts and sample grades are defined in `src/lib/seedData.js`. To
+load them into the configured Firestore project, run `npm run seed` only on a
+demo database; it updates fixed demo document IDs and must not be run against
+real student records. The included `firestore.rules.demo` is intentionally
+open for demonstration only; use authenticated Firestore rules before storing
+real student data.

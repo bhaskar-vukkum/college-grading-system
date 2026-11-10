@@ -1,14 +1,11 @@
 /**
- * Record store — Firestore REST.
- *
- * Talks to the Firestore REST API directly so the portal does not carry the
- * Firestore SDK. This project's database is locked (`PERMISSION_DENIED` for read
- * and write), so every call falls back to a local store seeded with the demo
- * records in seedData.js. Apply firestore.rules.demo and run `npm run seed` and
- * the same code starts reading the real documents.
+ * Firestore REST record store with a local demo-data fallback. Records already
+ * loaded from Firebase require remote reads and writes so they cannot silently
+ * drift into the browser-only store.
  */
 
-import { firebaseConfig } from '../firebase'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { firebaseConfig, firestore } from '../firebase'
 import { DEMO_PASSWORD, FACULTY_RECORDS, STUDENTS } from './seedData'
 
 const BASE = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents`
@@ -244,38 +241,60 @@ export async function lookupAccount(role, identifier) {  const remote = await fi
   return null
 }
 
-export async function getRecord(role, id) {
+export async function getRecord(role, id, { requireRemote = false } = {}) {
   const remote = await findRemote(role, id)
   if (remote) return { record: remote, source: 'firebase' }
+
+  if (requireRemote) {
+    throw new Error(`Could not load ${id} from Firebase. Check the connection and Firestore rules.`)
+  }
 
   const records = await localRecords()
   const record = records[id] || records[id.toUpperCase()]
   return record ? { record, source: 'local' } : null
 }
 
-export async function saveAccount(record) {
+export async function saveAccount(record, { requireRemote = false } = {}) {
   const name = COLLECTIONS[record.role]
-  if (remoteUsable) {
+  const remoteWasUsable = remoteUsable
+  if (remoteUsable || requireRemote) {
     const url = `${BASE}/${name}/${encodeURIComponent(record.id)}?key=${KEY}`
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), TIMEOUT)
+    let response
     try {
-      const response = await fetch(url, {
+      response = await fetch(url, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ fields: encodeFields(JSON.parse(JSON.stringify(record))) }),
         signal: controller.signal,
       })
-      if (response.ok) {
-        allowRemote()
-        return { source: 'firebase' }
+    } catch (error) {
+      blockRemote()
+      if (requireRemote || remoteWasUsable) {
+        throw new Error(`Firebase could not save ${record.id}: ${error.message}`)
       }
-      blockRemote()
-    } catch {
-      blockRemote()
     } finally {
       clearTimeout(timer)
     }
+
+    if (response?.ok) {
+      allowRemote()
+      return { source: 'firebase' }
+    }
+
+    if (response) {
+      blockRemote()
+      const body = await response.json().catch(() => ({}))
+      const message = body.error?.message || response.statusText
+      if (requireRemote || remoteWasUsable) {
+        throw new Error(`Firebase could not save ${record.id}: ${response.status} ${message}`)
+      }
+    }
+  }
+
+  if (requireRemote) {
+    throw new Error(`Firebase is unavailable; ${record.id} was not saved.`)
   }
 
   const records = await localRecords()
@@ -284,15 +303,43 @@ export async function saveAccount(record) {
   return { source: 'local' }
 }
 
-export async function listRecords(role) {
-  if (remoteUsable) {
-    const result = await request(`${BASE}/${COLLECTIONS[role]}?key=${KEY}`)
-    if (result?.documents) {
-      return {
-        records: result.documents.map((entry) => decodeFields(entry.fields)),
-        source: 'firebase',
-      }
+export function subscribeRecord(role, id, onRecord, onError) {
+  const collection = COLLECTIONS[role]
+  return onSnapshot(
+    doc(firestore, collection, id),
+    (snapshot) => {
+      if (snapshot.exists()) onRecord(snapshot.data())
+    },
+    onError
+  )
+}
+
+async function listRemote(role) {
+  const records = []
+  let pageToken = ''
+
+  do {
+    const token = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''
+    const result = await request(
+      `${BASE}/${COLLECTIONS[role]}?key=${KEY}&pageSize=1000${token}`
+    )
+    if (!result) return null
+    records.push(...(result.documents || []).map((entry) => decodeFields(entry.fields)))
+    pageToken = result.nextPageToken || ''
+  } while (pageToken)
+
+  return records
+}
+
+export async function listRecords(role, { requireRemote = false } = {}) {
+  if (remoteUsable || requireRemote) {
+    const records = await listRemote(role)
+    if (records) {
+      return { records, source: 'firebase' }
     }
+  }
+  if (requireRemote) {
+    throw new Error(`Could not load ${role} records from Firebase. Check the connection and Firestore rules.`)
   }
   const records = await localRecords()
   return {

@@ -5,15 +5,15 @@ import Shell from '../../components/dashboard/Shell'
 import { usePortal } from '../../lib/usePortal'
 
 export const FACULTY_ITEMS = [
-  { to: 'profile', label: 'My profile', sub: 'Your post, your office and the courses you hold', icon: User },
-  { to: 'assigned', label: 'Assigned exams', sub: 'Exams assigned to you, and how far the grading has run', icon: ClipboardCheck },
-  { to: 'grade', label: 'Enter marks', sub: 'Type marks for a course and publish the result', icon: PenLine },
-  { to: 'results', label: 'Class results', sub: 'Averages, grade spread and who is still pending', icon: BarChart3 },
-  { to: 'students', label: 'Students', sub: 'Everyone enrolled in the courses you teach', icon: Users },
+  { to: 'profile', label: 'My profile', sub: 'Your post, branch and the courses you hold', icon: User },
+  { to: 'assigned', label: 'Assigned exams', sub: 'Exams assigned to your branch, and grading progress', icon: ClipboardCheck },
+  { to: 'grade', label: 'Enter marks', sub: 'Add exams, enter marks and publish results', icon: PenLine },
+  { to: 'results', label: 'Class results', sub: 'Branch averages, grade spread and pending marks', icon: BarChart3 },
+  { to: 'students', label: 'Students', sub: 'Everyone enrolled in your branch', icon: Users },
 ]
 
 export default function FacultyLayout() {
-  const { record, source } = usePortal('faculty')
+  const { record, source, syncError, updateRecord } = usePortal('faculty')
 
   if (!record) {
     return (
@@ -31,7 +31,8 @@ export default function FacultyLayout() {
       source={source}
       context={[record.designation, record.department].filter(Boolean).join(' · ')}
     >
-      <Outlet context={{ record, source }} />
+      {syncError && <p className="portal-sync-warning" role="alert">{syncError}</p>}
+      <Outlet context={{ record, source, updateRecord }} />
     </Shell>
   )
 }

@@ -2,17 +2,24 @@ import { saveAccount } from './db'
 import { clampMark, computeGpa, gradeFor, MAX_EXTERNAL, MAX_INTERNAL } from './grades'
 
 /** Students who take a course: their record carries a row for it. */
-export function rosterFor(students, code) {
+export function rosterFor(students, code, department) {
+  const branch = department?.trim().toLowerCase()
+  if (department !== undefined && !branch) return []
   return students
-    .filter((student) => (student.marks || []).some((mark) => mark.code === code))
+    .filter((student) =>
+      department !== undefined
+        ? student.department?.trim().toLowerCase() === branch
+        : (student.marks || []).some((mark) => mark.code === code)
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
-/** Everyone across the courses a faculty member holds. */
-export function facultyStudents(students, courses) {
-  const codes = new Set(courses.map((course) => course.code))
+/** Everyone enrolled in the faculty member's department. */
+export function facultyStudents(students, department) {
+  const branch = department?.trim().toLowerCase()
+  if (!branch) return []
   return students
-    .filter((student) => (student.marks || []).some((mark) => codes.has(mark.code)))
+    .filter((student) => student.department?.trim().toLowerCase() === branch)
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -37,7 +44,17 @@ export function applyEntry(student, assignment, entry, publish) {
 
   const entries = {
     ...(student.entries || {}),
-    [assignment.id]: { internal, external, total, grade, published: publish },
+    [assignment.id]: {
+      code: assignment.code,
+      title: assignment.title,
+      credits: assignment.credits,
+      exam: assignment.exam,
+      internal,
+      external,
+      total,
+      grade,
+      published: publish,
+    },
   }
 
   let marks = [...(student.marks || [])]
@@ -63,9 +80,9 @@ export function applyEntry(student, assignment, entry, publish) {
 }
 
 /** Saves drafts or published results for every student with a complete entry. */
-export async function saveAssignment({ assignment, students, draft, publish }) {
+export async function saveAssignment({ assignment, students, draft, publish, source }) {
   let written = 0
-  let source = 'local'
+  let savedSource = source || 'local'
 
   for (const student of students) {
     const entry = draft[student.id]
@@ -73,10 +90,10 @@ export async function saveAssignment({ assignment, students, draft, publish }) {
     if (entry.internal === '' || entry.external === '') continue
 
     const updated = applyEntry(student, assignment, entry, publish)
-    const result = await saveAccount(updated)
-    source = result.source
+    const result = await saveAccount(updated, { requireRemote: savedSource === 'firebase' })
+    savedSource = result.source
     written += 1
   }
 
-  return { written, source }
+  return { written, source: savedSource }
 }

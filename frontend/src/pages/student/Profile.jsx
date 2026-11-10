@@ -29,7 +29,6 @@ export default function StudentProfile() {
           <div className="chips">
             <span className="chip">{record.year}</span>
             <span className="chip">{record.semester}</span>
-            <span className="chip">Section {record.section}</span>
           </div>
         </div>
       </section>
@@ -48,11 +47,9 @@ export default function StudentProfile() {
               { label: 'Roll number', value: record.id },
               { label: 'Email', value: record.email },
               { label: 'Phone', value: record.phone },
-              { label: 'Department', value: record.department },
+              { label: 'Branch', value: record.department },
               { label: 'Year', value: record.year },
               { label: 'Semester', value: record.semester },
-              { label: 'Section', value: record.section },
-              { label: 'Advisor', value: record.advisor },
               { label: 'Enrolled', value: record.enrolled },
             ]}
           />

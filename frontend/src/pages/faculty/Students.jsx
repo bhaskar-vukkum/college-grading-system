@@ -6,25 +6,31 @@ import { facultyStudents, markFor } from '../../lib/portal'
 import { EmptyState } from '../../components/dashboard/Bits'
 
 export default function FacultyStudents() {
-  const { record } = useOutletContext()
+  const { record, source } = useOutletContext()
   const courses = record.courses || []
+  const department = record.department
 
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [course, setCourse] = useState('all')
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     let alive = true
-    listRecords('student').then(({ records }) => {
+    listRecords('student', { requireRemote: source === 'firebase' }).then(({ records }) => {
       if (!alive) return
-      setStudents(facultyStudents(records, courses))
+      setStudents(facultyStudents(records, department))
       setLoading(false)
     })
+      .catch((loadError) => {
+        setError(loadError.message)
+        setLoading(false)
+      })
     return () => {
       alive = false
     }
-  }, [courses])
+  }, [department, source])
 
   const rows = useMemo(() => {
     const scoped =
@@ -63,6 +69,10 @@ export default function FacultyStudents() {
         </p>
       </div>
     )
+  }
+
+  if (error) {
+    return <div className="page"><p className="portal-sync-warning" role="alert">{error}</p></div>
   }
 
   if (students.length === 0) {
@@ -122,7 +132,7 @@ export default function FacultyStudents() {
             <thead>
               <tr>
                 <th scope="col">Student</th>
-                <th scope="col">Department</th>
+                <th scope="col">Branch</th>
                 <th scope="col">Marks published by you</th>
                 <th scope="col" className="num">
                   Average

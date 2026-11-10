@@ -13,7 +13,7 @@ export const STUDENT_ITEMS = [
 ]
 
 export default function StudentLayout() {
-  const { record, source } = usePortal('student')
+  const { record, source, syncError } = usePortal('student')
 
   if (!record) {
     return (
@@ -31,6 +31,7 @@ export default function StudentLayout() {
       source={source}
       context={[record.semester, record.year].filter(Boolean).join(' · ')}
     >
+      {syncError && <p className="portal-sync-warning" role="alert">{syncError}</p>}
       <Outlet context={{ record, source }} />
     </Shell>
   )

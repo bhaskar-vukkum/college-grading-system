@@ -1,8 +1,6 @@
 import { initializeApp } from 'firebase/app'
+import { getFirestore } from 'firebase/firestore'
 
-// Firebase project for GradeFlow. Authentication is not wired yet: the sign-in
-// page is a shell until the auth flow lands, but this app instance is ready for
-// getAuth / getFirestore when it does.
 export const firebaseConfig = {
   apiKey: 'AIzaSyDhSFA1OdS0gQBFl43JkF0fT75jtXpbWig',
   authDomain: 'college-grading-system-2b09e.firebaseapp.com',
@@ -13,7 +11,4 @@ export const firebaseConfig = {
 }
 
 export const app = initializeApp(firebaseConfig)
-
-// Next step, once the auth flow is ready:
-//   import { getAuth } from 'firebase/auth'
-//   export const auth = getAuth(app)
+export const firestore = getFirestore(app)
